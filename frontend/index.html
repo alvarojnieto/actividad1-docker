@@ -48,7 +48,22 @@
   <input type="number" id="mov-cantidad" placeholder="Cantidad" min="1" required>
   <button type="submit">Registrar movimiento</button>
 </form>
-
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <h3>Editar categoría</h3>
+    <form id="form-editar-categoria">
+      <input type="hidden" id="editar-cat-id">
+      <label>Nombre</label>
+      <input type="text" id="editar-cat-nombre" required>
+      <label>Descripción</label>
+      <input type="text" id="editar-cat-descripcion">
+      <div class="modal-botones">
+        <button type="button" id="cerrar-modal" class="secundario">Cancelar</button>
+        <button type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>

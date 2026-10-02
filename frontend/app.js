@@ -18,11 +18,60 @@ async function cargarCategorias() {
   datos.forEach(c => {
     tbody.innerHTML += `<tr>
       <td>${c.id}</td><td>${c.nombre}</td><td>${c.descripcion ?? ""}</td>
-      <td><button class="danger" onclick="eliminarCategoria(${c.id})">Eliminar</button></td>
+      <td>
+        <div class="acciones">
+          <button class="icon-btn" title="Editar" onclick='abrirModalEditar(${JSON.stringify(c)})'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
+              <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
+            </svg>
+          </button>
+          <button class="danger" onclick="eliminarCategoria(${c.id})">Eliminar</button>
+        </div>
+      </td>
     </tr>`;
     select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
   });
 }
+
+const modalOverlay = document.getElementById("modal-overlay");
+
+function abrirModalEditar(categoria) {
+  document.getElementById("editar-cat-id").value = categoria.id;
+  document.getElementById("editar-cat-nombre").value = categoria.nombre;
+  document.getElementById("editar-cat-descripcion").value = categoria.descripcion ?? "";
+  modalOverlay.classList.add("visible");
+}
+
+function cerrarModal() {
+  modalOverlay.classList.remove("visible");
+}
+
+document.getElementById("cerrar-modal").addEventListener("click", cerrarModal);
+
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) cerrarModal();
+});
+
+document.getElementById("form-editar-categoria").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("editar-cat-id").value;
+  const body = {
+    nombre: document.getElementById("editar-cat-nombre").value,
+    descripcion: document.getElementById("editar-cat-descripcion").value,
+  };
+  const res = await fetch(`${API}/categorias/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    mostrarMensaje("Categoría actualizada");
+    cerrarModal();
+    cargarCategorias();
+  } else {
+    mostrarMensaje("Error al actualizar categoría", true);
+  }
+});
 
 document.getElementById("form-categoria").addEventListener("submit", async (e) => {
   e.preventDefault();
