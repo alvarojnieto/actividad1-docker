@@ -34,6 +34,32 @@ services:
         condition: service_healthy
     networks:
       - inventario-net
+    
+  frontend:
+    build: ./frontend
+    container_name: inventario-frontend
+    restart: unless-stopped
+    ports:
+      - "5000:80"
+    depends_on:
+      - web
+    networks:
+      - inventario-net
+      
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: inventario-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - inventario-net
 
 volumes:
   db-data:

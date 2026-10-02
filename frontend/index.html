@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Inventario de Productos</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>Inventario de Productos</h1>
+<p id="estado" class="msg"></p>
+
+<h2>Categorías</h2>
+<table id="tabla-categorias">
+  <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+<form id="form-categoria">
+  <input type="text" id="cat-nombre" placeholder="Nombre" required>
+  <input type="text" id="cat-descripcion" placeholder="Descripción">
+  <button type="submit">Agregar categoría</button>
+</form>
+
+<h2>Productos</h2>
+<table id="tabla-productos">
+  <thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Categoría</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+<form id="form-producto">
+  <input type="text" id="prod-nombre" placeholder="Nombre" required>
+  <input type="number" id="prod-precio" placeholder="Precio" step="0.01" required>
+  <input type="number" id="prod-stock" placeholder="Stock" value="0" required>
+  <select id="prod-categoria" required></select>
+  <button type="submit">Agregar producto</button>
+</form>
+
+<h2>Movimientos</h2>
+<table id="tabla-movimientos">
+  <thead><tr><th>ID</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Fecha</th></tr></thead>
+  <tbody></tbody>
+</table>
+<form id="form-movimiento">
+  <select id="mov-producto" required></select>
+  <select id="mov-tipo" required>
+    <option value="entrada">Entrada</option>
+    <option value="salida">Salida</option>
+  </select>
+  <input type="number" id="mov-cantidad" placeholder="Cantidad" min="1" required>
+  <button type="submit">Registrar movimiento</button>
+</form>
+
+<script src="app.js"></script>
+</body>
+</html>
