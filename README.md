@@ -6,42 +6,44 @@ Proyecto desarrollado para la actividad **"Orquestacion de servicios con Docker 
 
 ## Arquitectura
 
-┌─────────────┐ fetch API ┌─────────────┐
-│ frontend │ ─────────────────> │ web │
-│ (Nginx) │ │ (Flask) │
-│ puerto 5000│ │ puerto 3000│
-└─────────────┘ └──────┬──────┘
-│
-┌──────▼──────┐
-┌─────────────┐ │ db │
-│ pgadmin │ ─────────────────> │ (PostgreSQL)│
-│ puerto 8080│ │ sin puerto │
-└─────────────┘ │ al host │
-└─────────────┘
-Red interna: inventario-net
-
+```
+┌─────────────┐     fetch API      ┌─────────────┐
+│  frontend   │ ─────────────────> │     web     │
+│  (Nginx)    │                    │   (Flask)   │
+│  puerto 5000│                    │  puerto 3000│
+└─────────────┘                    └──────┬──────┘
+                                           │
+                                    ┌──────▼──────┐
+┌─────────────┐                    │     db      │
+│  pgadmin    │ ─────────────────> │ (PostgreSQL)│
+│  puerto 8080│                    │ sin puerto  │
+└─────────────┘                    │  al host    │
+                                    └─────────────┘
+         Red interna: inventario-net
+```
 
 Todos los servicios se comunican a traves de la red interna **`inventario-net`**, usando el nombre del servicio como hostname (por ejemplo, `web` se conecta a la base de datos usando `db`, no una IP).
 
 ## Estructura del proyecto
 
+```
 actividad1-docker/
-├── .env # Variables de entorno reales 
-├── .env.example # Plantilla de variables de entorno
+├── .env                      # Variables de entorno reales
+├── .env.example               # Plantilla de variables de entorno
 ├── .gitignore
-├── docker-compose.yml # El "orquestador": define los 4 servicios (db, web, frontend, pgadmin)
+├── docker-compose.yml          # Define los 4 servicios (db, web, frontend, pgadmin)
 ├── app/
-│ ├── Dockerfile  # Receta para construir la imagen del servicio "web"
-│ ├── app.py # API REST en Flask
-│ ├── requirements.txt  # Lista de librerias de Python que necesita app.py
-│ └── init-db/
-│ └── 01-init.sql # esquema base de datos
+│   ├── Dockerfile              # Receta para construir la imagen del servicio "web"
+│   ├── app.py                  # API REST en Flask
+│   ├── requirements.txt        # Librerías de Python que necesita app.py
+│   └── init-db/
+│       └── 01-init.sql         # Esquema de la base de datos
 └── frontend/
-  ├── Dockerfile
-  ├── index.html # Estructura de la pagina 
-  ├── styles.css # Estilo de la pagina
-  └── app.js # Funcionalidad de la pagina
-
+    ├── Dockerfile
+    ├── index.html               # Estructura de la página
+    ├── styles.css                # Estilo de la página
+    └── app.js                    # Funcionalidad de la página
+```
 ## Requisitos previos
 
 - Docker y Docker Compose instalados (`docker compose version` debe funcionar)
@@ -185,6 +187,6 @@ docker compose up --build
 
 ## Autores
 
-Alvaro Jose Nieto Osorio - Universidad Nacional de Colombia, Sede Manizales
-Gabriela Cutiva Carbal - Universidad Nacional de Colombia, Sede Manizales
-Wilmer Steeven Acosta Mier - Universidad Nacional de Colombia, Sede Manizales
+- Alvaro Jose Nieto Osorio — Universidad Nacional de Colombia, Sede Manizales
+- Gabriela Cutiva Carbal — Universidad Nacional de Colombia, Sede Manizales
+- Wilmer Steeven Acosta Mier — Universidad Nacional de Colombia, Sede Manizales
