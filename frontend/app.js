@@ -7,38 +7,51 @@ function mostrarMensaje(texto, esError = false) {
   setTimeout(() => (estado.textContent = ""), 3000);
 }
 
-
-async function cargarCategorias() {
-  const res = await fetch(`${API}/categorias`);
-  const datos = await res.json();
-  const tbody = document.querySelector("#tabla-categorias tbody");
-  tbody.innerHTML = "";
-  const select = document.getElementById("prod-categoria");
-  select.innerHTML = "";
-  datos.forEach(c => {
-    tbody.innerHTML += `<tr>
-      <td>${c.id}</td><td>${c.nombre}</td><td>${c.descripcion ?? ""}</td>
-      <td>
-        <div class="acciones">
-          <button class="icon-btn" title="Editar" onclick='abrirModalEditar(${JSON.stringify(c)})'>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
-              <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
-            </svg>
-          </button>
-          <button class="danger" onclick="eliminarCategoria(${c.id})">Eliminar</button>
-        </div>
-      </td>
-    </tr>`;
-    select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
-  });
-}
-
 const modalOverlay = document.getElementById("modal-overlay");
+const formModal = document.getElementById("form-modal");
 
-function abrirModalEditar(categoria) {
-  document.getElementById("editar-cat-id").value = categoria.id;
-  document.getElementById("editar-cat-nombre").value = categoria.nombre;
-  document.getElementById("editar-cat-descripcion").value = categoria.descripcion ?? "";
+function abrirModal({ titulo, id, campos, onGuardar }) {
+  document.getElementById("modal-titulo").textContent = titulo;
+
+  const contenedor = document.getElementById("modal-campos");
+  contenedor.innerHTML = "";
+
+  campos.forEach(campo => {
+    const label = document.createElement("label");
+    label.textContent = campo.label;
+    contenedor.appendChild(label);
+
+    let input;
+    if (campo.type === "select") {
+      input = document.createElement("select");
+      campo.options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.text;
+        if (String(opt.value) === String(campo.value)) option.selected = true;
+        input.appendChild(option);
+      });
+    } else {
+      input = document.createElement("input");
+      input.type = campo.type || "text";
+      input.value = campo.value ?? "";
+      if (campo.step) input.step = campo.step;
+    }
+    input.id = `modal-campo-${campo.key}`;
+    input.required = campo.required !== false;
+    contenedor.appendChild(input);
+  });
+
+  formModal.onsubmit = async (e) => {
+    e.preventDefault();
+    const valores = {};
+    campos.forEach(campo => {
+      const el = document.getElementById(`modal-campo-${campo.key}`);
+      valores[campo.key] = campo.type === "number" ? parseFloat(el.value) : el.value;
+    });
+    await onGuardar(id, valores);
+  };
+
   modalOverlay.classList.add("visible");
 }
 
@@ -52,26 +65,55 @@ modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) cerrarModal();
 });
 
-document.getElementById("form-editar-categoria").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const id = document.getElementById("editar-cat-id").value;
-  const body = {
-    nombre: document.getElementById("editar-cat-nombre").value,
-    descripcion: document.getElementById("editar-cat-descripcion").value,
-  };
-  const res = await fetch(`${API}/categorias/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+async function cargarCategorias() {
+  const res = await fetch(`${API}/categorias`);
+  const datos = await res.json();
+  const tbody = document.querySelector("#tabla-categorias tbody");
+  tbody.innerHTML = "";
+  const select = document.getElementById("prod-categoria");
+  select.innerHTML = "";
+  datos.forEach(c => {
+    tbody.innerHTML += `<tr>
+      <td>${c.id}</td><td>${c.nombre}</td><td>${c.descripcion ?? ""}</td>
+      <td>
+        <div class="acciones">
+          <button class="icon-btn" title="Editar" onclick='abrirModalEditarCategoria(${JSON.stringify(c)})'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
+              <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
+            </svg>
+          </button>
+          <button class="danger" onclick="eliminarCategoria(${c.id})">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+    select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
   });
-  if (res.ok) {
-    mostrarMensaje("Categoría actualizada");
-    cerrarModal();
-    cargarCategorias();
-  } else {
-    mostrarMensaje("Error al actualizar categoría", true);
-  }
-});
+}
+
+function abrirModalEditarCategoria(categoria) {
+  abrirModal({
+    titulo: "Editar categoría",
+    id: categoria.id,
+    campos: [
+      { key: "nombre", label: "Nombre", value: categoria.nombre },
+      { key: "descripcion", label: "Descripción", value: categoria.descripcion ?? "", required: false },
+    ],
+    onGuardar: async (id, valores) => {
+      const res = await fetch(`${API}/categorias/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(valores),
+      });
+      if (res.ok) {
+        mostrarMensaje("Categoría actualizada");
+        cerrarModal();
+        cargarCategorias();
+      } else {
+        mostrarMensaje("Error al actualizar categoría", true);
+      }
+    },
+  });
+}
 
 document.getElementById("form-categoria").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -97,7 +139,6 @@ async function eliminarCategoria(id) {
   else { mostrarMensaje("No se pudo eliminar (¿tiene productos asociados?)", true); }
 }
 
-
 async function cargarProductos() {
   const res = await fetch(`${API}/productos`);
   const datos = await res.json();
@@ -109,9 +150,56 @@ async function cargarProductos() {
     tbody.innerHTML += `<tr>
       <td>${p.id}</td><td>${p.nombre}</td><td>$${p.precio}</td><td>${p.stock}</td>
       <td>${p.categoria_nombre}</td>
-      <td><button class="danger" onclick="eliminarProducto(${p.id})">Eliminar</button></td>
+      <td>
+        <div class="acciones">
+          <button class="icon-btn" title="Editar" onclick='abrirModalEditarProducto(${JSON.stringify(p)})'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
+              <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
+            </svg>
+          </button>
+          <button class="danger" onclick="eliminarProducto(${p.id})">Eliminar</button>
+        </div>
+      </td>
     </tr>`;
     select.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+  });
+}
+
+async function abrirModalEditarProducto(producto) {
+  const resCat = await fetch(`${API}/categorias`);
+  const categorias = await resCat.json();
+  const categoriaActual = categorias.find(c => c.nombre === producto.categoria_nombre);
+
+  abrirModal({
+    titulo: "Editar producto",
+    id: producto.id,
+    campos: [
+      { key: "nombre", label: "Nombre", value: producto.nombre },
+      { key: "precio", label: "Precio", type: "number", step: "0.01", value: producto.precio },
+      { key: "stock", label: "Stock", type: "number", value: producto.stock },
+      {
+        key: "categoria_id", label: "Categoría", type: "select",
+        value: categoriaActual?.id,
+        options: categorias.map(c => ({ value: c.id, text: c.nombre })),
+      },
+    ],
+    onGuardar: async (id, valores) => {
+      valores.categoria_id = parseInt(valores.categoria_id);
+      valores.precio = parseFloat(valores.precio);
+      valores.stock = parseInt(valores.stock);
+      const res = await fetch(`${API}/productos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(valores),
+      });
+      if (res.ok) {
+        mostrarMensaje("Producto actualizado");
+        cerrarModal();
+        cargarProductos();
+      } else {
+        mostrarMensaje("Error al actualizar producto", true);
+      }
+    },
   });
 }
 
@@ -142,7 +230,6 @@ async function eliminarProducto(id) {
   if (res.ok) { mostrarMensaje("Producto eliminado"); cargarProductos(); }
   else { mostrarMensaje("No se pudo eliminar", true); }
 }
-
 
 async function cargarMovimientos() {
   const res = await fetch(`${API}/movimientos`);
@@ -178,6 +265,5 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     mostrarMensaje("Error al registrar movimiento", true);
   }
 });
-
 
 cargarCategorias().then(cargarProductos).then(cargarMovimientos);

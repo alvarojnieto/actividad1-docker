@@ -148,7 +148,8 @@ button.secundario:hover {
   color: #374151;
 }
 
-.modal input {
+.modal input,
+.modal select {
   width: 100%;
   box-sizing: border-box;
 }
