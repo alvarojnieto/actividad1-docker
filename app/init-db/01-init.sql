@@ -19,6 +19,37 @@ CREATE TABLE movimientos (
     cantidad INTEGER NOT NULL CHECK (cantidad > 0),
     fecha TIMESTAMP NOT NULL DEFAULT NOW()
 );
+CREATE OR REPLACE FUNCTION actualizar_stock_producto()
+RETURNS TRIGGER AS $$
+DECLARE
+    stock_actual INTEGER;
+BEGIN
+    IF NEW.tipo = 'entrada' THEN
+        UPDATE productos SET stock = stock + NEW.cantidad WHERE id = NEW.producto_id;
+
+    ELSIF NEW.tipo = 'salida' THEN
+        SELECT stock INTO stock_actual FROM productos WHERE id = NEW.producto_id;
+
+        IF stock_actual IS NULL THEN
+            RAISE EXCEPTION 'El producto % no existe', NEW.producto_id;
+        END IF;
+
+        IF NEW.cantidad > stock_actual THEN
+            RAISE EXCEPTION 'Stock insuficiente: hay % unidades y se intentaron sacar %',
+                stock_actual, NEW.cantidad;
+        END IF;
+
+        UPDATE productos SET stock = stock - NEW.cantidad WHERE id = NEW.producto_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_actualizar_stock
+AFTER INSERT ON movimientos
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_stock_producto();
 
 
 INSERT INTO categorias (nombre, descripcion) VALUES
