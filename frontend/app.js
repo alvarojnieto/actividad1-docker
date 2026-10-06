@@ -289,4 +289,13 @@ function aplicarFiltroProductos() {
 
 document.getElementById("filtro-productos").addEventListener("input", aplicarFiltroProductos);
 
-cargarCategorias().then(cargarProductos).then(cargarMovimientos);
+cargarCategorias()
+  .then(cargarProductos)
+  .then(cargarMovimientos)
+  .catch(() => {
+    // El aviso se queda visible hasta recargar la pagina
+    estado.textContent = `No se pudo conectar con la API en ${API}. Verifica que el servicio "web" este corriendo (docker compose ps) y recarga la pagina.`;
+    estado.className = "msg error";
+  });
+
+  
