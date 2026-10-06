@@ -65,19 +65,45 @@ modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) cerrarModal();
 });
 
+// La API devuelve las fechas en UTC sin zona horaria; sin la "Z" el navegador las toma como hora local
+function formatearFecha(iso) {
+  const conZona = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
+  return new Date(conZona).toLocaleString("es-CO");
+}
+
+// La API devuelve el precio como texto ("2500.00")
+function formatearPrecio(precio) {
+  return Number(precio).toLocaleString("es-CO", { maximumFractionDigits: 2 });
+}
+
+// Escapa texto antes de meterlo en la tabla (evita que comillas o < > rompan el HTML)
+function escaparHTML(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Ultimos datos cargados, para abrir el modal de edicion por id
+let categoriasCargadas = [];
+let productosCargados = [];
+
 async function cargarCategorias() {
   const res = await fetch(`${API}/categorias`);
   const datos = await res.json();
+  categoriasCargadas = datos;
   const tbody = document.querySelector("#tabla-categorias tbody");
   tbody.innerHTML = "";
   const select = document.getElementById("prod-categoria");
   select.innerHTML = "";
   datos.forEach(c => {
     tbody.innerHTML += `<tr>
-      <td>${c.id}</td><td>${c.nombre}</td><td>${c.descripcion ?? ""}</td>
+      <td>${c.id}</td><td>${escaparHTML(c.nombre)}</td><td>${escaparHTML(c.descripcion)}</td>
       <td>
         <div class="acciones">
-          <button class="icon-btn" title="Editar" onclick='abrirModalEditarCategoria(${JSON.stringify(c)})'>
+          <button class="icon-btn" title="Editar" onclick="abrirModalEditarCategoria(categoriasCargadas.find(x => x.id === ${c.id}))">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
               <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
             </svg>
@@ -86,7 +112,7 @@ async function cargarCategorias() {
         </div>
       </td>
     </tr>`;
-    select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+    select.innerHTML += `<option value="${c.id}">${escaparHTML(c.nombre)}</option>`;
   });
 }
 
@@ -107,7 +133,8 @@ function abrirModalEditarCategoria(categoria) {
       if (res.ok) {
         mostrarMensaje("Categoría actualizada");
         cerrarModal();
-        cargarCategorias();
+        // Los productos muestran el nombre de la categoria
+        cargarCategorias().then(cargarProductos);
       } else {
         mostrarMensaje("Error al actualizar categoría", true);
       }
@@ -142,17 +169,18 @@ async function eliminarCategoria(id) {
 async function cargarProductos() {
   const res = await fetch(`${API}/productos`);
   const datos = await res.json();
+  productosCargados = datos;
   const tbody = document.querySelector("#tabla-productos tbody");
   tbody.innerHTML = "";
   const select = document.getElementById("mov-producto");
   select.innerHTML = "";
   datos.forEach(p => {
     tbody.innerHTML += `<tr>
-      <td>${p.id}</td><td>${p.nombre}</td><td>$${p.precio}</td><td>${p.stock}</td>
-      <td>${p.categoria_nombre}</td>
+      <td>${p.id}</td><td>${escaparHTML(p.nombre)}</td><td>$${formatearPrecio(p.precio)}</td><td>${p.stock}</td>
+      <td>${escaparHTML(p.categoria_nombre)}</td>
       <td>
         <div class="acciones">
-          <button class="icon-btn" title="Editar" onclick='abrirModalEditarProducto(${JSON.stringify(p)})'>
+          <button class="icon-btn" title="Editar" onclick="abrirModalEditarProducto(productosCargados.find(x => x.id === ${p.id}))">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
               <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
             </svg>
@@ -161,8 +189,10 @@ async function cargarProductos() {
         </div>
       </td>
     </tr>`;
-    select.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+    select.innerHTML += `<option value="${p.id}">${escaparHTML(p.nombre)}</option>`;
   });
+  // Mantener el filtro de busqueda al recargar la tabla
+  aplicarFiltroProductos();
 }
 
 async function abrirModalEditarProducto(producto) {
@@ -195,7 +225,7 @@ async function abrirModalEditarProducto(producto) {
       if (res.ok) {
         mostrarMensaje("Producto actualizado");
         cerrarModal();
-        cargarProductos();
+        cargarProductos().then(cargarMovimientos);
       } else {
         mostrarMensaje("Error al actualizar producto", true);
       }
@@ -238,8 +268,8 @@ async function cargarMovimientos() {
   tbody.innerHTML = "";
   datos.forEach(m => {
     tbody.innerHTML += `<tr>
-      <td>${m.id}</td><td>${m.producto_nombre}</td><td>${m.tipo}</td>
-      <td>${m.cantidad}</td><td>${new Date(m.fecha).toLocaleString()}</td>
+      <td>${m.id}</td><td>${escaparHTML(m.producto_nombre)}</td><td>${m.tipo}</td>
+      <td>${m.cantidad}</td><td>${formatearFecha(m.fecha)}</td>
     </tr>`;
   });
 }
@@ -265,12 +295,21 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     mostrarMensaje("Error al registrar movimiento", true);
   }
 });
-document.getElementById("filtro-productos").addEventListener("input", (e) => {
-  const texto = e.target.value.toLowerCase();
+function aplicarFiltroProductos() {
+  const texto = document.getElementById("filtro-productos").value.trim().toLowerCase();
   document.querySelectorAll("#tabla-productos tbody tr").forEach(fila => {
     const nombre = fila.children[1].textContent.toLowerCase();
     fila.style.display = nombre.includes(texto) ? "" : "none";
   });
-});
+}
 
-cargarCategorias().then(cargarProductos).then(cargarMovimientos);
+document.getElementById("filtro-productos").addEventListener("input", aplicarFiltroProductos);
+
+cargarCategorias()
+  .then(cargarProductos)
+  .then(cargarMovimientos)
+  .catch(() => {
+    // El aviso se queda visible hasta recargar la pagina
+    estado.textContent = `No se pudo conectar con la API en ${API}. Verifica que el servicio "web" este corriendo (docker compose ps) y recarga la pagina.`;
+    estado.className = "msg error";
+  });
