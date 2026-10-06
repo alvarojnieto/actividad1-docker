@@ -265,5 +265,12 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     mostrarMensaje("Error al registrar movimiento", true);
   }
 });
+document.getElementById("filtro-productos").addEventListener("input", (e) => {
+  const texto = e.target.value.toLowerCase();
+  document.querySelectorAll("#tabla-productos tbody tr").forEach(fila => {
+    const nombre = fila.children[1].textContent.toLowerCase();
+    fila.style.display = nombre.includes(texto) ? "" : "none";
+  });
+});
 
 cargarCategorias().then(cargarProductos).then(cargarMovimientos);
