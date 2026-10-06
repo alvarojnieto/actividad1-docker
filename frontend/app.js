@@ -4,6 +4,8 @@ const estado = document.getElementById("estado");
 function mostrarMensaje(texto, esError = false) {
   estado.textContent = texto;
   estado.className = esError ? "msg error" : "msg";
+    if (esError) estado.scrollIntoView({ behavior: "smooth", block: "center" }); // <-- NUEVA
+
   setTimeout(() => (estado.textContent = ""), 3000);
 }
 // ---------- Validaciones del lado del cliente ----------
@@ -144,8 +146,8 @@ function abrirModalEditarCategoria(categoria) {
 
 document.getElementById("form-categoria").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const nombre = document.getElementById("cat-nombre").value;
-  const descripcion = document.getElementById("cat-descripcion").value;
+  const nombre = document.getElementById("cat-nombre").value.trim();
+  const descripcion = document.getElementById("cat-descripcion").value.trim();
   const res = await fetch(`${API}/categorias`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -232,12 +234,14 @@ async function abrirModalEditarProducto(producto) {
 
 document.getElementById("form-producto").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = {
-    nombre: document.getElementById("prod-nombre").value,
+    const body = {
+    nombre: document.getElementById("prod-nombre").value.trim(),
     precio: parseFloat(document.getElementById("prod-precio").value),
     stock: parseInt(document.getElementById("prod-stock").value),
     categoria_id: parseInt(document.getElementById("prod-categoria").value),
   };
+  const errorValidacion = validarProducto(body);
+  if (errorValidacion) { mostrarMensaje(errorValidacion, true); return; }
   const res = await fetch(`${API}/productos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -278,6 +282,9 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     tipo: document.getElementById("mov-tipo").value,
     cantidad: parseInt(document.getElementById("mov-cantidad").value),
   };
+  const errorValidacion = validarMovimiento(body);
+  if (errorValidacion) { mostrarMensaje(errorValidacion, true); return; }
+
   const res = await fetch(`${API}/movimientos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
