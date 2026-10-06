@@ -65,6 +65,17 @@ modalOverlay.addEventListener("click", (e) => {
   if (e.target === modalOverlay) cerrarModal();
 });
 
+// La API devuelve las fechas en UTC sin zona horaria; sin la "Z" el navegador las toma como hora local
+function formatearFecha(iso) {
+  const conZona = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
+  return new Date(conZona).toLocaleString("es-CO");
+}
+
+// La API devuelve el precio como texto ("2500.00")
+function formatearPrecio(precio) {
+  return Number(precio).toLocaleString("es-CO", { maximumFractionDigits: 2 });
+}
+
 async function cargarCategorias() {
   const res = await fetch(`${API}/categorias`);
   const datos = await res.json();
@@ -148,7 +159,7 @@ async function cargarProductos() {
   select.innerHTML = "";
   datos.forEach(p => {
     tbody.innerHTML += `<tr>
-      <td>${p.id}</td><td>${p.nombre}</td><td>$${p.precio}</td><td>${p.stock}</td>
+      <td>${p.id}</td><td>${p.nombre}</td><td>$${formatearPrecio(p.precio)}</td><td>${p.stock}</td>
       <td>${p.categoria_nombre}</td>
       <td>
         <div class="acciones">
@@ -239,7 +250,7 @@ async function cargarMovimientos() {
   datos.forEach(m => {
     tbody.innerHTML += `<tr>
       <td>${m.id}</td><td>${m.producto_nombre}</td><td>${m.tipo}</td>
-      <td>${m.cantidad}</td><td>${new Date(m.fecha).toLocaleString()}</td>
+      <td>${m.cantidad}</td><td>${formatearFecha(m.fecha)}</td>
     </tr>`;
   });
 }
