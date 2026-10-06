@@ -1,6 +1,9 @@
 # Inventario de Productos — Orquestación con Docker Compose
 
-Sistema de gestión de inventario con 4 servicios orquestados mediante Docker Compose: base de datos PostgreSQL, API REST en Flask, interfaz de administracion con pgAdmin y frontend servido por Nginx.
+Sistema de gestión de inventario con 4 servicios orquestados mediante Docker Compose: 
+- Base de datos PostgreSQL
+- API REST en Flask
+- Interfaz de administracion con pgAdmin y frontend servido por Nginx.
 
 Proyecto desarrollado para la actividad **"Orquestacion de servicios con Docker Compose"** - Tendencias en Administracion de Sistemas Informaticos, UNAL Manizales.
 
