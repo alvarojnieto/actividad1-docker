@@ -174,6 +174,8 @@ async function cargarProductos() {
     </tr>`;
     select.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
   });
+  // Mantener el filtro de busqueda al recargar la tabla
+  aplicarFiltroProductos();
 }
 
 async function abrirModalEditarProducto(producto) {
@@ -276,12 +278,14 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     mostrarMensaje("Error al registrar movimiento", true);
   }
 });
-document.getElementById("filtro-productos").addEventListener("input", (e) => {
-  const texto = e.target.value.toLowerCase();
+function aplicarFiltroProductos() {
+  const texto = document.getElementById("filtro-productos").value.trim().toLowerCase();
   document.querySelectorAll("#tabla-productos tbody tr").forEach(fila => {
     const nombre = fila.children[1].textContent.toLowerCase();
     fila.style.display = nombre.includes(texto) ? "" : "none";
   });
-});
+}
+
+document.getElementById("filtro-productos").addEventListener("input", aplicarFiltroProductos);
 
 cargarCategorias().then(cargarProductos).then(cargarMovimientos);
