@@ -118,7 +118,8 @@ function abrirModalEditarCategoria(categoria) {
       if (res.ok) {
         mostrarMensaje("Categoría actualizada");
         cerrarModal();
-        cargarCategorias();
+        // Los productos muestran el nombre de la categoria
+        cargarCategorias().then(cargarProductos);
       } else {
         mostrarMensaje("Error al actualizar categoría", true);
       }
@@ -208,7 +209,7 @@ async function abrirModalEditarProducto(producto) {
       if (res.ok) {
         mostrarMensaje("Producto actualizado");
         cerrarModal();
-        cargarProductos();
+        cargarProductos().then(cargarMovimientos);
       } else {
         mostrarMensaje("Error al actualizar producto", true);
       }
