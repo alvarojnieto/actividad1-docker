@@ -14,7 +14,7 @@ CREATE TABLE productos (
 
 CREATE TABLE movimientos (
     id SERIAL PRIMARY KEY,
-    producto_id INTEGER NOT NULL REFERENCES productos(id),
+    producto_id INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
     tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('entrada', 'salida')),
     cantidad INTEGER NOT NULL CHECK (cantidad > 0),
     fecha TIMESTAMP NOT NULL DEFAULT NOW()
