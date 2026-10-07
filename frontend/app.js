@@ -4,9 +4,38 @@ const estado = document.getElementById("estado");
 function mostrarMensaje(texto, esError = false) {
   estado.textContent = texto;
   estado.className = esError ? "msg error" : "msg";
+    if (esError) estado.scrollIntoView({ behavior: "smooth", block: "center" }); // <-- NUEVA
+
   setTimeout(() => (estado.textContent = ""), 3000);
 }
+// ---------- Validaciones del lado del cliente ----------
+function validarTexto(valor, campo, max) {
+  const v = (valor ?? "").trim();
+  if (!v) return `${campo} no puede estar vacío`;
+  if (v.length > max) return `${campo} no puede superar ${max} caracteres`;
+  return null;
+}
 
+function validarNumero(valor, campo, { min = 0, max = Infinity, entero = false } = {}) {
+  if (typeof valor !== "number" || Number.isNaN(valor)) return `${campo} debe ser un número`;
+  if (entero && !Number.isInteger(valor)) return `${campo} debe ser un número entero`;
+  if (valor < min) return `${campo} no puede ser menor que ${min}`;
+  if (valor > max) return `${campo} no puede ser mayor que ${max}`;
+  return null;
+}
+
+function validarProducto({ nombre, precio, stock, categoria_id }) {
+  return validarTexto(nombre, "El nombre", 150)
+    || validarNumero(precio, "El precio", { min: 0, max: 99999999.99 })
+    || validarNumero(stock, "El stock", { min: 0, max: 2147483647, entero: true })
+    || (Number.isInteger(categoria_id) ? null : "Selecciona una categoría");
+}
+
+function validarMovimiento({ producto_id, tipo, cantidad }) {
+  return (Number.isInteger(producto_id) ? null : "Selecciona un producto")
+    || (["entrada", "salida"].includes(tipo) ? null : "El tipo debe ser entrada o salida")
+    || validarNumero(cantidad, "La cantidad", { min: 1, max: 1000000, entero: true });
+}
 const modalOverlay = document.getElementById("modal-overlay");
 const formModal = document.getElementById("form-modal");
 
@@ -144,8 +173,8 @@ function abrirModalEditarCategoria(categoria) {
 
 document.getElementById("form-categoria").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const nombre = document.getElementById("cat-nombre").value;
-  const descripcion = document.getElementById("cat-descripcion").value;
+  const nombre = document.getElementById("cat-nombre").value.trim();
+  const descripcion = document.getElementById("cat-descripcion").value.trim();
   const res = await fetch(`${API}/categorias`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -235,12 +264,14 @@ async function abrirModalEditarProducto(producto) {
 
 document.getElementById("form-producto").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = {
-    nombre: document.getElementById("prod-nombre").value,
+    const body = {
+    nombre: document.getElementById("prod-nombre").value.trim(),
     precio: parseFloat(document.getElementById("prod-precio").value),
     stock: parseInt(document.getElementById("prod-stock").value),
     categoria_id: parseInt(document.getElementById("prod-categoria").value),
   };
+  const errorValidacion = validarProducto(body);
+  if (errorValidacion) { mostrarMensaje(errorValidacion, true); return; }
   const res = await fetch(`${API}/productos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -281,6 +312,9 @@ document.getElementById("form-movimiento").addEventListener("submit", async (e) 
     tipo: document.getElementById("mov-tipo").value,
     cantidad: parseInt(document.getElementById("mov-cantidad").value),
   };
+  const errorValidacion = validarMovimiento(body);
+  if (errorValidacion) { mostrarMensaje(errorValidacion, true); return; }
+
   const res = await fetch(`${API}/movimientos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
