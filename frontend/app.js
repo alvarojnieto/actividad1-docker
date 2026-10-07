@@ -287,8 +287,9 @@ document.getElementById("form-producto").addEventListener("submit", async (e) =>
 });
 
 async function eliminarProducto(id) {
+  if (!confirm("Se eliminará el producto y también todos sus movimientos. ¿Continuar?")) return;   // NUEVA
   const res = await fetch(`${API}/productos/${id}`, { method: "DELETE" });
-  if (res.ok) { mostrarMensaje("Producto eliminado"); cargarProductos(); }
+  if (res.ok) { mostrarMensaje("Producto eliminado"); cargarProductos(); cargarMovimientos(); }   // + cargarMovimientos()
   else { mostrarMensaje("No se pudo eliminar", true); }
 }
 
